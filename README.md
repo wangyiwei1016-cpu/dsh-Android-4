@@ -251,8 +251,9 @@ MyApp/app/src/main/java/com/example/myapp/
 ## 构建与安装
 
 ```powershell
-cd "E:\DeepSeek Harness\AndroidDev"
-.\build.ps1 -Install -Serial V86DHIAYAMEIRWWO
+cd <仓库目录>
+.\build.ps1 -Install              # 装到唯一在线设备
+.\build.ps1 -Install -Serial emulator-5554   # 多设备时指定
 ```
 
 ## 环境要求
@@ -270,8 +271,7 @@ cd "E:\DeepSeek Harness\AndroidDev"
 ## 打包
 
 ```powershell
-cd "E:\DeepSeek Harness\AndroidDev"
-$env:GRADLE_USER_HOME = "$PWD\.gradle"
+# 先按 keystore.properties.example 建好 MyApp/keystore.properties
 .\MyApp\gradlew.bat -p .\MyApp assembleRelease
 # 产物：MyApp\app\build\outputs\apk\release\app-release.apk
 ```
