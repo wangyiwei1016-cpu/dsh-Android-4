@@ -60,24 +60,6 @@ Material 风格但**没有用 Material Components 库**（`com.google.android.ma
 
 回形针图标是矢量 drawable（`res/drawable/ic_attach.xml`），靠 `vectorDrawables.useSupportLibrary = true` + `AppCompatImageView` 在 API 14 上渲染——4.2 原生不支持 VectorDrawable。
 
-## 顶栏/底栏高斯模糊
-
-真·内容模糊，不是贴一张半透明色块：消息滚到栏下面会被糊开（`blur-top.png` 能看到底下的英文被模糊）。
-
-实现（`Blur.kt`）：
-
-- API 17 没有 `RenderEffect`（要 31），`ScriptIntrinsicBlur` 在低端机上开销也不稳，所以自己实现
-- 把栏底下那条内容按 **1/8 降采样**画进小位图（720×140 的条带 → 90×18），横向纵向各做两遍盒式模糊
-- 小图上模糊几乎免费，放大回屏幕靠双线性插值，观感和真高斯差别很小
-- 滚动时刷新，节流 **120ms**，不会把主线程压死
-
-布局上要配合：
-
-- 内容（ScrollView）铺满全屏，用 `paddingTop/paddingBottom + clipToPadding="false"` 让气泡能从栏底下滑过去
-- 栏是覆盖层，模糊图作为**背景**（`LayerDrawable`：模糊位图 + 92% 不透明蒙层），不是子 View
-
-踩过的坑：最初把模糊图做成栏里的 `ImageView`（`match_parent`），而栏本身是 `wrap_content`——`match_parent` 子 View 在 `wrap_content` 容器里会被量成整屏高，结果底栏撑满屏幕、把整个界面盖住了。改成背景 `LayerDrawable` 才解决，顺带也省掉一层 View。
-
 ## 自定义背景
 
 设置页里可以选一张自己的图当聊天背景，模糊和明暗各一根滑块，**弹窗内有 110dp 预览区实时更新**。
@@ -101,17 +83,6 @@ Material 风格但**没有用 Material Components 库**（`com.google.android.ma
 - 行首 `- ` → `• `
 
 流式和最终渲染走同一个函数，避免"流式时是粗体、结束后变回星号"这种不一致。
-
-## 图标
-
-用 `make_icon2.py` 从原始鲸鱼图生成，不是手工切图：
-
-- 抠图按**色度**（max-min 通道差）而不是亮度——鲸鱼本身是中蓝色，按亮度算会被当成半透明，出来一圈灰边
-- 4 倍超采样（2048px）后下采样到各密度，48px 的旧机器图标也不糊
-- 输出 `mipmap-mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi` 五档 PNG（API 14 没有自适应图标）
-- 另出一张透明底 `drawable-nodpi/logo.png` 给界面空状态用
-
-改配色只需动脚本里的 `(238, 242, 255)`，重跑即可。
 
 ## 性能
 
@@ -174,21 +145,8 @@ Trust anchor for certification path not found
 
 ### 关于 `v1` 和模型版本
 
-两件不同的事，别混：
-
 - **`/v1`** 是 **HTTP 接口协议版本**，指"OpenAI 兼容 REST 规范第 1 版"，路径形如 `/v1/chat/completions`。它不会跟着模型升级变。
 - **模型版本**在请求体的 `model` 字段里，跟 URL 无关。
-
-DeepSeek 当前（文档口径）的模型名：
-
-| 模型名 | 实际版本 | 说明 |
-| --- | --- | --- |
-| `deepseek-flash` | DeepSeek-V4.1-Flash-1017 | 快、便宜，支持视觉，2500 并发 |
-| `deepseek-v4-pro` | DeepSeek-V4-Pro-0813 | 更强，价格高，不支持视觉 |
-
-旧的 `deepseek-v4-flash` / `deepseek-v4-flash-vision-exp` 仍被接受但已下架，请求会转到 V4.1-Flash。**`deepseek-chat` 这类老别名不要再用了。**
-
-模型名以后还会变，所以设置页有个「从服务端拉取模型列表」按钮：直接调 `GET {baseUrl}/models`，点选即可，不用改代码。
 
 ### 思考模式
 
@@ -199,12 +157,6 @@ DeepSeek 当前（文档口径）的模型名：
 ```
 
 设置页勾选「思考模式」可以打开。这个字段是 DeepSeek 的扩展，只在接口地址包含 `deepseek` 时才发送，避免其它 OpenAI 兼容服务因为不认识该字段报错。
-
-### API Key 存放
-
-- key 只存在 App 私有目录 `shared_prefs/ai_settings.xml`，**不写进代码、不打包进 APK**
-- `android:allowBackup="false"`，避免 `adb backup` 把 key 拖出来
-- 换句话说：换手机/重装系统要重新填一次，这是故意的
 
 
 ## 调试入口
@@ -248,65 +200,7 @@ MyApp/app/src/main/java/com/example/myapp/
 - **无语音/图片**：只有纯文本。
 - **targetSdk 34**：Google Play 上架要求，旧机分发不受影响。
 
-## 构建与安装
-
-```powershell
-cd <仓库目录>
-.\build.ps1 -Install              # 装到唯一在线设备
-.\build.ps1 -Install -Serial emulator-5554   # 多设备时指定
-```
 
 ## 环境要求
 
-| 项 | 要求 |
-| --- | --- |
-| JDK | **17 ~ 21**（AGP 8.7 不认 JDK 25；Studio 自带的 jbr 25 直接构建会失败） |
-| Android SDK | platform 34 + build-tools 34.0.0 |
-| Gradle | 仓库自带 wrapper（8.13，走腾讯云镜像） |
-
-构建前设置 `JAVA_HOME` 和 `ANDROID_HOME`，`build.ps1` 会检查这两个变量。
-
 验证过的设备：红米 1（Android 4.2.1 / API 17，armeabi-v7a）、Android 4.0.4 模拟器（API 15 x86）、OPPO（Android 16）。
-
-## 打包
-
-```powershell
-# 先按 keystore.properties.example 建好 MyApp/keystore.properties
-.\MyApp\gradlew.bat -p .\MyApp assembleRelease
-# 产物：MyApp\app\build\outputs\apk\release\app-release.apk
-```
-
-发布包 `dsh-1.0.apk`（6.14 MB，已签名，直接拷进手机安装）：
-
-| 项 | 值 |
-| --- | --- |
-| minSdk / targetSdk | 14 / 34 |
-| 签名 | v1 + v2（4.0 只认 v1） |
-| 证书 | `CN=dsh`。证书和口令分别放在 `MyApp/keystore/release.keystore` 和 `keystore.properties`，两者都已 gitignore |
-| ABI | armeabi-v7a / arm64-v8a / x86 / x86_64（Conscrypt 的 native 库） |
-| SHA-256 | `9CD19438E29144EAEABFE2D980A5AE022797EC1450D56C6697BE6915495F18E2` |
-
-注意：调试版和发布版用的是**不同证书**，互相覆盖安装会失败（`INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES`）。换签名安装必须先卸载，数据会丢。以后升级发布版务必用同一个 keystore，否则用户无法覆盖升级。
-
-### 发布包必须实测，调试包说明不了问题
-
-第一次打出来的 release 包在 API 15 上启动就崩：
-
-```
-java.lang.NoSuchMethodError: android.view.View.setBackground
-  at com.example.myapp.MainActivity.updateBars(MainActivity.kt:804)
-```
-
-`View.setBackground()` 是 **API 16** 才有的方法，我们 minSdk 是 14。调试包在红米（API 17）上一直正常，所以完全没暴露；换成模拟器上的 4.0.4 一跑就炸。改成 `ViewCompat.setBackground()` 后正常，`lintRelease` 也确认 0 errors（29 warnings 都是排版类）。
-
-## 踩过的坑
-
-- 用 PowerShell 往设备里写 shared_prefs 时，-Encoding utf8 会带 BOM，SharedPreferences 解析失败后会**整份回退成默认值**（表现为 API Key 凭空消失）。要用 UTF8Encoding($false) 写成无 BOM
-
-- 系统 `java` 1.8、Studio 自带 jbr 25 都不能编译 → 固定 JDK 21
-- `services.gradle.org` 302 到墙外 CDN → wrapper 指腾讯云镜像
-- 调试签名放项目内 `MyApp/keystore/debug.keystore`，不依赖用户目录下的默认调试证书
-- 改 `AndroidManifest.xml` 后 Gradle 显示 UP-TO-DATE → 加 `--rerun-tasks`
-- 红米 1 的 MIUI：`/sdcard` 对 shell 不可写，截图写 `/data/local/tmp`
-- 红米 1 内存小，`adb input` 驱动的 UI 测试经常丢事件，改用 intent 触发的自检更可靠
-
