@@ -1,0 +1,27 @@
+# 构建产物
+build/
+.gradle/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 本地环境
+local.properties
+.idea/
+*.iml
+.DS_Store
+
+# 本机缓存（体积大，可重新下载）
+tools/
+downloads/
+.gradle-cache/
+
+# 生成物
+icons/
+*.apk
+*.aab
+
+# 签名：发布证书和口令绝不入库
+MyApp/keystore/release.keystore
+keystore.properties
+*.jks

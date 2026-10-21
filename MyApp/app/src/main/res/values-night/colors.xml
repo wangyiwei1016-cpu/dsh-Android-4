@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 深色：偏中性灰，避免纯黑在 LCD 上发灰 -->
+    <color name="bg">#0F1115</color>
+    <color name="surface">#171A21</color>
+    <color name="primary">#3B82F6</color>
+    <color name="text_primary">#E5E7EB</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="divider">#262A33</color>
+    <color name="surface_glass">#EB171A21</color>
+    <color name="avatar_bg">#1E2533</color>
+    <color name="error_bg">#2A1618</color>
+    <color name="error_text">#F87171</color>
+</resources>
