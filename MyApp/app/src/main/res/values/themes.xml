@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- 不设的话 Switch 会用 AppCompat 默认的青绿色，跟主色打架 -->
+        <item name="colorAccent">@color/primary</item>
+        <item name="colorControlActivated">@color/primary</item>
+    </style>
+</resources>

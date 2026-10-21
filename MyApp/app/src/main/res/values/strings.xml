@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">dsh</string>
+    <string name="send">发送</string>
+    <string name="settings">设置</string>
+    <string name="input_hint">说点什么…</string>
+    <string name="empty_title">有什么可以帮你？</string>
+    <string name="toggle_theme">切换深色模式</string>
+    <string name="attach">添加附件</string>
+    <string name="attach_pick">添加什么？</string>
+    <string name="attach_image">图片</string>
+    <string name="attach_doc">文本文件</string>
+    <string name="image_prompt">请描述这张图片</string>
+</resources>
+
